@@ -1,4 +1,4 @@
-package bookcontroller
+package imagecontroller
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ import (
 )
 
 func Index(c *fiber.Ctx) error {
-	var books []models.Book
+	var books []models.Image
 	models.DB.Find(&books)
 
 	return c.JSON(books)
@@ -19,7 +19,7 @@ func Index(c *fiber.Ctx) error {
 func Show(c *fiber.Ctx) error {
 
 	id := c.Params("id")
-	var book models.Book
+	var book models.Image
 	if err := models.DB.First(&book, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(http.StatusNotFound).JSON(fiber.Map{
@@ -37,7 +37,7 @@ func Show(c *fiber.Ctx) error {
 
 func Create(c *fiber.Ctx) error {
 
-	var book models.Book
+	var book models.Image
 	if err := c.BodyParser(&book); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": err.Error(),
@@ -57,7 +57,7 @@ func Update(c *fiber.Ctx) error {
 
 	id := c.Params("id")
 
-	var book models.Book
+	var book models.Image
 	if err := c.BodyParser(&book); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": err.Error(),
@@ -79,7 +79,7 @@ func Delete(c *fiber.Ctx) error {
 
 	id := c.Params("id")
 
-	var book models.Book
+	var book models.Image
 	if models.DB.Delete(&book, id).RowsAffected == 0 {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"message": "Tidak dapat menghapus data",
