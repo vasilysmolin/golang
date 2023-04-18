@@ -23,11 +23,11 @@ func main() {
 	book.Put("/:id", bookcontroller.Update)
 	book.Delete("/:id", bookcontroller.Delete)
 
-    images.Get("/", imagecontroller.Index)
-    images.Get("/:id", imagecontroller.Show)
-    images.Post("/", imagecontroller.Create)
-    images.Put("/:id", imagecontroller.Update)
-    images.Delete("/:id", imagecontroller.Delete)
+//     images.Get("/", imagecontroller.Index)
+//     images.Get("/:id", imagecontroller.Show)
+//     images.Post("/", imagecontroller.Create)
+//     images.Put("/:id", imagecontroller.Update)
+//     images.Delete("/:id", imagecontroller.Delete)
 
 	app.Listen(":4090")
 }
