@@ -1,4 +1,4 @@
-module github.com/tentangkode/go-restapi-fiber
+module github.com/vasilysmolin/fiber-rest-api
 
 go 1.18
 
