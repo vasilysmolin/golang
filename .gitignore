@@ -1,0 +1,5 @@
+/.idea
+/.vagrant
+/.vscode
+/.config
+.env

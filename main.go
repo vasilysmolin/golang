@@ -1,33 +1,57 @@
 package main
 
 import (
-	"github.com/vasilysmolin/fiber-rest-api/controllers/bookcontroller"
-	"github.com/vasilysmolin/fiber-rest-api/controllers/imagecontroller"
-
+    "gorm.io/gorm"
+    "os"
+    "gorm.io/driver/mysql"
 	"github.com/gofiber/fiber/v2"
-	"github.com/vasilysmolin/fiber-rest-api/models"
 )
 
+var DB *gorm.DB
+
+var (
+	dbHost       = os.Getenv("DB_HOST")
+	dbUserName   = os.Getenv("DB_USERNAME")
+	dbDatabase   = os.Getenv("DB_DATABASE")
+	dbPassword  = os.Getenv("DB_PASSWORD")
+)
+
+
+type Image struct {
+	Id          int64  `gorm:"primaryKey" json:"id"`
+	Name       string `gorm:"type:varchar(300)" json:"title"`
+}
+
+
+func Index(c *fiber.Ctx) error {
+	var images []Image
+	DB.Find(&images)
+
+	return c.JSON(images)
+}
+
+
 func main() {
-	models.ConnectDatabase()
+	ConnectDatabase()
 
 	app := fiber.New()
 
 	api := app.Group("/api")
 	book := api.Group("/books")
-	images := api.Group("/images")
 
-	book.Get("/", bookcontroller.Index)
-	book.Get("/:id", bookcontroller.Show)
-	book.Post("/", bookcontroller.Create)
-	book.Put("/:id", bookcontroller.Update)
-	book.Delete("/:id", bookcontroller.Delete)
-
-//     images.Get("/", imagecontroller.Index)
-//     images.Get("/:id", imagecontroller.Show)
-//     images.Post("/", imagecontroller.Create)
-//     images.Put("/:id", imagecontroller.Update)
-//     images.Delete("/:id", imagecontroller.Delete)
+	book.Get("/", Index)
 
 	app.Listen(":4090")
 }
+
+
+func ConnectDatabase() {
+	db, err := gorm.Open(mysql.Open(""+dbUserName+":"+dbPassword+"@tcp("+dbHost+":3306)/"+dbDatabase+""))
+	if err != nil {
+		panic(err)
+	}
+
+	db.AutoMigrate(&Image{})
+	DB = db
+}
+

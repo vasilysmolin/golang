@@ -1,9 +1,10 @@
-module github.com/vasilysmolin/fiber-rest-api
+module main
 
 go 1.18
 
 require (
 	github.com/gofiber/fiber/v2 v2.36.0
+	github.com/vasilysmolin/fiber-rest-api v0.0.0-20230418053818-8f896fd8d23b
 	gorm.io/driver/mysql v1.3.5
 	gorm.io/gorm v1.23.8
 )
