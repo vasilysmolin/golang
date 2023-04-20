@@ -3,3 +3,4 @@
 /.vscode
 /.config
 .env
+.env-go
