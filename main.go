@@ -3,22 +3,44 @@ package main
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gofiber/template/html"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"os"
+	"log"
 	"fmt"
     "net/http"
     "strings"
+    "time"
 )
 
 var DB *gorm.DB
 
-var (
-	dbHost     = os.Getenv("DB_HOST")
-	dbUserName = os.Getenv("DB_USERNAME")
-	dbDatabase = os.Getenv("DB_DATABASE")
-	dbPassword = os.Getenv("DB_PASSWORD")
-)
+type Film struct {
+    Title    string
+    IsViewed bool
+}
+
+var films = []Film{
+    {
+        Title:    "The Shawshank Redemption",
+        IsViewed: true,
+    },
+    {
+        Title:    "The Godfather",
+        IsViewed: true,
+    },
+    {
+        Title:    "The Godfather: Part II",
+        IsViewed: false,
+    },
+}
+
 
 func AuthMiddleware() func(*fiber.Ctx) error {
  return func(c *fiber.Ctx) error {
@@ -46,7 +68,7 @@ func AuthMiddleware() func(*fiber.Ctx) error {
   }
 
   if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-   c.Locals("user", claims["user"])
+   c.Locals("user", claims["UserID"])
    return c.Next()
   }
 
@@ -63,26 +85,70 @@ func Index(c *fiber.Ctx) error {
 
 	var images []Image
 	DB.Find(&images)
+    tokenString := c.Get("Authorization")[7:]
+    token, _ := jwt.Parse(tokenString, nil)
+    claims := token.Claims.(jwt.MapClaims)
+    userID := claims["userID"]
 
-	return c.JSON(images)
+	return c.JSON(userID)
 }
 
 func main() {
+
 	ConnectDatabase()
-	a := []int{12, 8, 22, 11, 1, 3}
-    InsertSort(a)
-	app := fiber.New()
+// 	a := []int{12, 8, 22, 11, 1, 3}
+//     InsertSort(a)
+	viewsEngine := html.New("./template", ".tmpl")
+    app := fiber.New(fiber.Config{
+        Views: viewsEngine,
+    })
+
+    app.Use(requestid.New())
+    app.Use(logger.New(logger.Config{
+        Format:     "${locals:requestid}: ${time} ${method} ${path} - ${status} - ${latency}\n",
+        TimeFormat: "2006-01-02 15:04:05.000000",
+    }))
+
+    app.Use(limiter.New(limiter.Config{
+        KeyGenerator: func(c *fiber.Ctx) string {
+            return c.IP()
+        },
+        Max:        200,
+        Expiration: 60 * time.Second,
+    }))
+
+    app.Get("/profile", func(c *fiber.Ctx) error {
+        return c.Render("profile", fiber.Map{
+            "name":  "John",
+            "email": "john@doe.com",
+        })
+    })
+
+    app.Get("/films", func(c *fiber.Ctx) error {
+            return c.Render("film-list", films)
+    })
 
 	api := app.Group("/api")
-	book := api.Group("/books")
+	images := api.Group("/images")
 
-	book.Get("/", AuthMiddleware() , Index)
+	images.Get("/", AuthMiddleware() , Index)
 
-	app.Listen(":4090")
+	logrus.Fatal(app.Listen(":4090"))
 }
 
 
 func ConnectDatabase() {
+    err := godotenv.Load()
+    if err != nil {
+        log.Fatalf("Error loading .env file: %v", err)
+    }
+
+    var (
+        dbHost     = os.Getenv("DB_HOST")
+        dbUserName = os.Getenv("DB_USERNAME")
+        dbDatabase = os.Getenv("DB_DATABASE")
+        dbPassword = os.Getenv("DB_PASSWORD")
+    )
 	db, err := gorm.Open(mysql.Open("" + dbUserName + ":" + dbPassword + "@tcp(" + dbHost + ":3306)/" + dbDatabase + ""))
 	if err != nil {
 		panic(err)
@@ -92,14 +158,15 @@ func ConnectDatabase() {
 	DB = db
 }
 
-func InsertSort(a []int) {
-	for i := 1; i < len(a); i++ {
-		j := i
-		for ; j > 0 && a[i] < a[j-1]; j-- {
-		}
-		for ; i > j; i-- {
-			a[i], a[i-1] = a[i-1], a[i]
-		}
-	}
-}
+// func InsertSort(a []int) {
+// 	for i := 1; i < len(a); i++ {
+// 		j := i
+// 		for ; j > 0 && a[i] < a[j-1]; j-- {
+// 		}
+// 		for ; i > j; i-- {
+// 			a[i], a[i-1] = a[i-1], a[i]
+// 		}
+// 	}
+// }
+
 
