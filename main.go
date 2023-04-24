@@ -5,6 +5,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gofiber/template/html"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/joho/godotenv"
@@ -40,6 +41,51 @@ var films = []Film{
         IsViewed: false,
     },
 }
+
+func main() {
+
+	ConnectDatabase()
+	viewsEngine := html.New("./template", ".tmpl")
+    app := fiber.New(fiber.Config{
+        Views: viewsEngine,
+        ReadTimeout:  3 * time.Second,
+        WriteTimeout: 3 * time.Second,
+    })
+    app.Use(recover.New())
+
+    app.Use(requestid.New())
+    app.Use(logger.New(logger.Config{
+        Format:     "${locals:requestid}: ${time} ${method} ${path} - ${status} - ${latency}\n",
+        TimeFormat: "2023-01-01 15:04:05.000000",
+    }))
+
+    app.Use(limiter.New(limiter.Config{
+        KeyGenerator: func(c *fiber.Ctx) string {
+            return c.IP()
+        },
+        Max:        200,
+        Expiration: 60 * time.Second,
+    }))
+
+    app.Get("/profile", func(c *fiber.Ctx) error {
+        return c.Render("profile", fiber.Map{
+            "name":  "John",
+            "email": "john@doe.com",
+        })
+    })
+
+    app.Get("/films", func(c *fiber.Ctx) error {
+            return c.Render("film-list", films)
+    })
+
+	api := app.Group("/api")
+	images := api.Group("/images")
+
+	images.Get("/", AuthMiddleware() , Index)
+
+	logrus.Fatal(app.Listen(":4090"))
+}
+
 
 
 func AuthMiddleware() func(*fiber.Ctx) error {
@@ -91,49 +137,6 @@ func Index(c *fiber.Ctx) error {
     userID := claims["userID"]
 
 	return c.JSON(userID)
-}
-
-func main() {
-
-	ConnectDatabase()
-// 	a := []int{12, 8, 22, 11, 1, 3}
-//     InsertSort(a)
-	viewsEngine := html.New("./template", ".tmpl")
-    app := fiber.New(fiber.Config{
-        Views: viewsEngine,
-    })
-
-    app.Use(requestid.New())
-    app.Use(logger.New(logger.Config{
-        Format:     "${locals:requestid}: ${time} ${method} ${path} - ${status} - ${latency}\n",
-        TimeFormat: "2006-01-02 15:04:05.000000",
-    }))
-
-    app.Use(limiter.New(limiter.Config{
-        KeyGenerator: func(c *fiber.Ctx) string {
-            return c.IP()
-        },
-        Max:        200,
-        Expiration: 60 * time.Second,
-    }))
-
-    app.Get("/profile", func(c *fiber.Ctx) error {
-        return c.Render("profile", fiber.Map{
-            "name":  "John",
-            "email": "john@doe.com",
-        })
-    })
-
-    app.Get("/films", func(c *fiber.Ctx) error {
-            return c.Render("film-list", films)
-    })
-
-	api := app.Group("/api")
-	images := api.Group("/images")
-
-	images.Get("/", AuthMiddleware() , Index)
-
-	logrus.Fatal(app.Listen(":4090"))
 }
 
 
