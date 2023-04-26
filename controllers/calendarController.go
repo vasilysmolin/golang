@@ -65,7 +65,7 @@ func Calendar(c *fiber.Ctx) error {
 //         }
 
       user := new(models.User)
-      models.DB.Preload("Studio").Preload("Profile").First(&user, 152)
+      models.DB.Preload("Profile.Address").First(&user, 152)
 
 	  return c.JSON(user)
 }
