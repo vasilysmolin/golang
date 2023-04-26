@@ -7,10 +7,8 @@ import (
 	"strings"
 	"fmt"
     "os"
+    "main/models"
 )
-
-var AuthUserID int64
-
 
 func AuthMiddleware() func(*fiber.Ctx) error {
  return func(c *fiber.Ctx) error {
@@ -38,8 +36,10 @@ func AuthMiddleware() func(*fiber.Ctx) error {
   }
 
   if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-   c.Locals("user", claims["userID"])
-   return c.Next()
+      user := new(models.User)
+      models.DB.Preload("Profile.Address").First(&user, claims["userID"])
+      c.Locals("authUser", user)
+      return c.Next()
   }
 
   return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"message": "Invalid Authorization Token"})

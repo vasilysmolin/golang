@@ -8,4 +8,8 @@ type Profile struct {
     UpdatedAt string `json:"updatedAt,omitempty"`
 }
 
+func (Profile) TableName() string {
+    return "profiles"
+}
+
 

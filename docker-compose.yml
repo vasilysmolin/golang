@@ -4,4 +4,4 @@ services:
     build: .
     env_file: .env-go
     ports:
-      - "127.0.0.1:4090:4090"
+      - "127.0.0.1:4091:4091"

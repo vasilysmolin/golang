@@ -7,4 +7,9 @@ type Address struct {
     UpdatedAt string `json:"updatedAt,omitempty"`
 }
 
+func (Address) TableName() string {
+    return "addresses"
+}
+
+
 

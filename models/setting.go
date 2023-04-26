@@ -12,4 +12,8 @@ type AddressesOnlineSettings struct {
     UpdatedAt string `json:"updatedAt,omitempty"`
 }
 
+func (AddressesOnlineSettings) TableName() string {
+    return "addresses_online_settings"
+}
+
 

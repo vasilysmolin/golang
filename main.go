@@ -8,13 +8,20 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/sirupsen/logrus"
+	"github.com/joho/godotenv"
     "time"
+    "log"
     "main/models"
     "main/middleware"
     "main/controllers"
 )
 
 func main() {
+
+    err := godotenv.Load()
+    if err != nil {
+        log.Fatalf("Error loading .env file: %v", err)
+    }
 
 	models.ConnectDatabase()
 	viewsEngine := html.New("./template", ".tmpl")
@@ -43,6 +50,7 @@ func main() {
 	settings := api.Group("/settings")
 
 	settings.Get("/online/info", middleware.AuthMiddleware() ,  controllers.Show)
+	api.Get("/calendar", middleware.AuthMiddleware() ,  controllers.Calendar)
 	logrus.Fatal(app.Listen(":4091"))
 }
 
