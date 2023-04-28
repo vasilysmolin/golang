@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm/logger"
 	"os"
 	"log"
-	"gorm.io/gorm/schema"
+// 	"gorm.io/gorm/schema"
 )
 
 var DB *gorm.DB
@@ -28,10 +28,10 @@ func ConnectDatabase() {
 	db, err := gorm.Open(mysql.Open("" + dbUserName + ":" + dbPassword + "@tcp(" + dbHost + ":3306)/" + dbDatabase + ""),
 	 &gorm.Config{
           Logger: newLogger,
-          NamingStrategy: schema.NamingStrategy{
-            NoLowerCase: true,
-            SingularTable: true,
-          },
+//           NamingStrategy: schema.NamingStrategy{
+//             NoLowerCase: true,
+//             SingularTable: true,
+//           },
     })
 	if err != nil {
 		panic(err)

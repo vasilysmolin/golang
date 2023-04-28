@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
     "main/models"
     "net/http"
+    "strconv"
 )
 
 const unknown = "unknown"
@@ -56,18 +57,58 @@ func Calendar(c *fiber.Ctx) error {
 //            return c.Status(http.StatusUnprocessableEntity).JSON(errorMap)
 //         }
 
-//         position := c.Query("position", "0")
-//         countMaster := c.Query("countMaster", "15")
+        positionReq := c.Query("position", "0")
+        countMasterReq := c.Query("countMaster", "15")
 
-//         user, ok := c.Locals("authUser").(*models.User)
-//         if !ok {
-//             return c.Status(http.StatusUnprocessableEntity).JSON(ok)
+        user, ok := c.Locals("authUser").(*models.User)
+        if !ok {
+            return c.Status(http.StatusUnprocessableEntity).JSON(ok)
+        }
+
+        // string to int
+        position, err := strconv.Atoi(positionReq)
+        if err != nil {
+            panic(err)
+            panic(user)
+        }
+        countMaster, err := strconv.Atoi(countMasterReq)
+        if err != nil {
+            panic(err)
+        }
+        skip :=  position * countMaster
+        if skip < 0 {
+            panic(skip)
+        }
+
+//         type Result struct {
+//           UserID   int `json:"userID"`
+//           AddressID   int `json:"addressID"`
+//           ItemID   int `json:"itemID"`
+//           Name string `json:"name"`
+//           Avatar  string `json:"avatar"`
+//           Sort  int `json:"sort"`
 //         }
+//
+//         var result []Result
+//         models.DB.Raw("select users.userID,name,avatar,MIN(schedule_address_user.sort) AS sort,schedule_address_user.itemID,addressID from `users` left join `schedule_address_user` on `users`.`userID` =`schedule_address_user`.`userID` where `users`.`userID` in (?) and`schedule_address_user`.`addressID` = ? and `users`.`deleted_at` is null group by `users`.`userID`,`schedule_address_user`.`itemID` order by `sort` asc", 36718, 6045).Scan(&result)
 
-      user := new(models.User)
-      models.DB.Preload("Profile.Address").First(&user, 152)
+        type User struct {
+//           UserID   int `json:"userID"`
+          Name string `json:"name"`
+        }
 
-	  return c.JSON(user)
+        var result User
+        models.DB.Raw("select * from `users` where `userID` = ? and `users`.`deleted_at` is null limit 1", 36718).First(&user)
+
+//
+//        type MyData struct {
+//            ID   int `gorm:"primary_key:column:id" json:"id"`
+//        }
+//
+//        var result MyData
+//        models.DB.Raw("SELECT id FROM plans WHERE id = ?", 1).First(&result)
+
+	    return c.JSON(result)
 }
 
 
