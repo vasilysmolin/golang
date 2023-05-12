@@ -48,18 +48,22 @@ func Register(c *fiber.Ctx) error {
        return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
     }
 
-    models.DB.Create(&user)
-    return c.JSON(user)
+    result := models.DB.Create(&user)
+    if result.Error != nil {
+        return c.Status(fiber.StatusUnprocessableEntity).JSON(result.Error)
+    }
+    token := createTokenJwt(user.ID)
+    return c.JSON(token)
 }
 
 
-func createTokenJwt(id int64) string {
+func createTokenJwt(id uint64) string {
     // Создаем токен
     token := jwt.New(jwt.SigningMethodHS256)
 
     // Устанавливаем параметры токена
     claims := token.Claims.(jwt.MapClaims)
-    claims["user_id"] = 123
+    claims["user_id"] = id
     claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
 
     // Генерируем секретный ключ
@@ -105,7 +109,7 @@ func refreshTokenJwt(tokenString string) string {
    }
 
 
-   return createTokenJwt(claims["user_id"].(int64))
+   return createTokenJwt(claims["user_id"].(uint64))
 
 }
 

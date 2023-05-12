@@ -11,10 +11,5 @@ func Info(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
-func Store(c *fiber.Ctx) error {
-
-    user := new(models.User)
-	return c.JSON(user)
-}
 
 
