@@ -3,6 +3,8 @@ module main
 go 1.18
 
 require (
+	github.com/go-playground/validator/v10 v10.13.0
+	github.com/goccy/go-json v0.10.2
 	github.com/gofiber/fiber/v2 v2.44.0
 	github.com/gofiber/template v1.8.1
 	github.com/golang-jwt/jwt/v5 v5.0.0
@@ -15,6 +17,8 @@ require (
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
+	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.1.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -25,6 +29,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
+	github.com/leodido/go-urn v1.2.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
@@ -38,6 +43,7 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/yandex-cloud/go-genproto v0.0.0-20230424104855-9e5dea1cf9e4 // indirect
 	github.com/yandex-cloud/go-sdk v0.0.0-20230424105230-a4219c6b46ff // indirect
+	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.8.0 // indirect

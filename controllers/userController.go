@@ -5,7 +5,13 @@ import (
     "main/models"
 )
 
-func Show(c *fiber.Ctx) error {
+func Info(c *fiber.Ctx) error {
+
+    user := new(models.User)
+	return c.JSON(user)
+}
+
+func Store(c *fiber.Ctx) error {
 
     user := new(models.User)
 	return c.JSON(user)

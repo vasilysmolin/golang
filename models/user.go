@@ -1,14 +1,16 @@
 package models
 
+import (
+    "time"
+)
 
 type User struct {
-	UserID  int64  `gorm:"primary_key;column:userID" json:"userID"`
-	Phone string `gorm:"column:phone" json:"phone"`
-	Avatar string `gorm:"column:avatar" json:"avatar"`
-    CreatedAt string `json:"createdAt,omitempty"`
-    UpdatedAt string `json:"updatedAt,omitempty"`
+    UserID  uint64  `gorm:"primary_key;column:userID" json:"id"`
+	Phone string `gorm:"column:phone;size:256;uniqueIndex:idx_phone,unique" json:"phone" validate:"required,min=3,max=32"`
+	Email string `gorm:"column:email;size:256;uniqueIndex:idx_email,unique;" json:"email" validate:"required,email,min=6,max=32"`
+	Avatar string `gorm:"column:avatar;size:3000;" json:"avatar"`
+    UpdatedAt time.Time `gorm:"autoCreateTime:nano;autoUpdateTime:nano" json:"updated_at,omitempty"`
+    CreatedAt time.Time `gorm:"autoCreateTime:nano;" json:"created_at,omitempty"`
+    DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
-func (User) TableName() string {
-    return "users"
-}

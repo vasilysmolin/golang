@@ -2,18 +2,17 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/template/html"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/sirupsen/logrus"
 	"github.com/joho/godotenv"
+	"github.com/goccy/go-json"
     "time"
     "log"
     "main/models"
-    "main/middleware"
-    "main/controllers"
+    "main/routes"
 )
 
 func main() {
@@ -24,14 +23,13 @@ func main() {
     }
 
 	models.ConnectDatabase()
-	viewsEngine := html.New("./template", ".tmpl")
     app := fiber.New(fiber.Config{
-        Views: viewsEngine,
         ReadTimeout:  3 * time.Second,
         WriteTimeout: 3 * time.Second,
+        JSONEncoder: json.Marshal,
+        JSONDecoder: json.Unmarshal,
     })
     app.Use(recover.New())
-
     app.Use(requestid.New())
     app.Use(logger.New(logger.Config{
         Format:     "${locals:requestid}: ${time} ${method} ${path} - ${status} - ${latency}\n",
@@ -46,11 +44,8 @@ func main() {
         Expiration: 60 * time.Second,
     }))
 
-	api := app.Group("/api/crm")
-	settings := api.Group("/settings")
+    routes.SetupRoutes(app)
 
-	settings.Get("/online/info", middleware.AuthMiddleware() ,  controllers.Show)
-	api.Get("/calendar", middleware.AuthMiddleware() ,  controllers.Calendar)
 	logrus.Fatal(app.Listen(":4091"))
 }
 

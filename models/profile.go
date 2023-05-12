@@ -1,15 +1,13 @@
 package models
 
+import (
+    "gorm.io/gorm"
+)
+
 type Profile struct {
-	ProfileID int64 `gorm:"primary_key;column:profileID" json:"profileID"`
-	UserID   int64 `gorm:"column:userID" json:"userID"`
-// 	Address  Address `gorm:"foreignKey:ProfileID" json:"address"`
-//     CreatedAt string `json:"createdAt,omitempty"`
-//     UpdatedAt string `json:"updatedAt,omitempty"`
+	gorm.Model
+	UserID   int64 `gorm:"column:user_id;uniqueIndex:idx_user_id,unique" json:"user_id"`
 }
 
-func (Profile) TableName() string {
-    return "profiles"
-}
 
 
