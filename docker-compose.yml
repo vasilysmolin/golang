@@ -5,3 +5,16 @@ services:
     env_file: .env-go
     ports:
       - "127.0.0.1:4091:4091"
+
+#  mariadb:
+#    image: mariadb
+#    restart: always
+#    volumes:
+#      - ./mariadb_data:/var/lib/mysql
+#    environment:
+#      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+#      MYSQL_DATABASE: ${DB_DATABASE}
+#      MYSQL_USER: ${DB_USERNAME}
+#      MYSQL_PASSWORD: ${DB_PASSWORD}
+#    ports:
+#      - "3316:3306"
