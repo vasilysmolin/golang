@@ -8,6 +8,10 @@ import (
 	"main/models"
 	"os"
 	"time"
+	"context"
+	"github.com/go-vk-api/vk"
+    "golang.org/x/oauth2"
+	vkAuth "golang.org/x/oauth2/vk"
 )
 
 type ErrorResponse struct {
@@ -55,6 +59,69 @@ func Register(c *fiber.Ctx) error {
 	token := createTokenJwt(user.ID)
 	return c.JSON(token)
 }
+
+func RegisterVk(c *fiber.Ctx) error {
+
+	conf := &oauth2.Config{
+		ClientID:     os.Getenv("CLIENT_ID"),
+		ClientSecret: os.Getenv("CLIENT_SECRET"),
+		RedirectURL:  os.Getenv("REDIRECT_URL"),
+		Scopes:       []string{"profile", "email"},
+		Endpoint:     vkAuth.Endpoint,
+	}
+
+	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
+    fmt.Println("url:", url)
+    return c.JSON(url)
+
+}
+
+func VerifyVk(c *fiber.Ctx) error {
+
+        conf := &oauth2.Config{
+            ClientID:     os.Getenv("CLIENT_ID"),
+            ClientSecret: os.Getenv("CLIENT_SECRET"),
+            RedirectURL:  os.Getenv("REDIRECT_URL"),
+            Scopes:       []string{"profile", "email"},
+            Endpoint:     vkAuth.Endpoint,
+        }
+
+        code := c.Query("code", "anonymous")
+        ctx := context.Background()
+        fmt.Println("authRes.Code:", code)
+		tok, err := conf.Exchange(ctx, code)
+		fmt.Println("tok:", tok)
+		if err != nil {
+			fmt.Println("Ошибка при код на access токен:", err)
+		}
+		client, err := vk.NewClientWithOptions(vk.WithToken(tok.AccessToken))
+		if err != nil {
+			fmt.Println("Ошибка при создаем клиента для получения данных из API VK:", err)
+		}
+		user := getCurrentUser(client)
+
+    return c.JSON(user)
+
+}
+
+type User struct {
+	ID        int64  `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email  string `json:"email"`
+	Photo     string `json:"photo_400_orig"`
+}
+
+func getCurrentUser(api *vk.Client) User  {
+	var users []User
+
+	err := api.CallMethod("users.get", vk.RequestParams{
+		"fields": "photo_400_orig,city,email",
+	}, &users)
+	fmt.Println("user:", err)
+	return users[0]
+}
+
 
 func createTokenJwt(id uint64) string {
 	// Создаем токен
