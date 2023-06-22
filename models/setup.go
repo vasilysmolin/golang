@@ -36,6 +36,6 @@ func ConnectDatabase() {
 		panic(err)
 	}
 
-	db.AutoMigrate(&User{}, &Profile{})
+	db.AutoMigrate(&User{}, &Profile{}, &UserSocials{})
 	DB = db
 }
