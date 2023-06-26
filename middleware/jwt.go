@@ -37,7 +37,7 @@ func AuthMiddleware() func(*fiber.Ctx) error {
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			user := new(models.User)
-			models.DB.Preload("Profile.Address").First(&user, claims["userID"])
+			models.DB.First(&user, claims["user_id"])
 			c.Locals("authUser", user)
 			return c.Next()
 		}

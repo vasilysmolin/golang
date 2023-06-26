@@ -7,3 +7,6 @@ start:
 
 get:
 	go get
+
+mod:
+	go mod tidy

@@ -9,7 +9,9 @@ import (
 	"os"
 	"time"
 	"context"
+	"net/http"
 	"github.com/go-vk-api/vk"
+	"golang.org/x/crypto/bcrypt"
     "golang.org/x/oauth2"
 	vkAuth "golang.org/x/oauth2/vk"
 )
@@ -22,7 +24,7 @@ type ErrorResponse struct {
 
 var validate = validator.New()
 
-func ValidateStruct(user models.User) []*ErrorResponse {
+func ValidateStruct(user User) []*ErrorResponse {
 	var errors []*ErrorResponse
 	err := validate.Struct(user)
 	if err != nil {
@@ -37,9 +39,66 @@ func ValidateStruct(user models.User) []*ErrorResponse {
 	return errors
 }
 
+type User struct {
+    ID  uint64  `json:"id"`
+	Email string `json:"email" validate:"required,email,min=6,max=32"`
+	Password string `json:"password" validate:"min=1,max=32"`
+    UpdatedAt time.Time `json:"updated_at,omitempty"`
+    CreatedAt time.Time `json:"created_at,omitempty"`
+}
+
+type Auth struct {
+	Email string `json:"email" validate:"required,email,min=6,max=32"`
+	Password string `json:"password" validate:"min=1,max=32"`
+}
+
+type JwtResponse struct {
+	AccessToken string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType string `json:"type_token"`
+	ExpiredIn int64 `json:"expired_in"`
+}
+
+func Login(c *fiber.Ctx) error {
+    // Получение переданных данных
+    data := new(Auth)
+    if err := c.BodyParser(data); err != nil {
+    		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+    			"message": err.Error(),
+    		})
+    	}
+
+
+    // Проверка наличия правильных данных и получение пользователя из базы данных
+    user, err := getUserByEmailAndPassword(data.Email, data.Password)
+    if err != nil {
+        return c.Status(401).JSON(fiber.Map{
+            "message": "Unauthorized",
+        })
+    }
+
+    token := createTokenJwt(user.ID)
+    return c.JSON(token)
+}
+
+// Получение пользователя из базы данных по электронной почте и паролю
+func getUserByEmailAndPassword(email, password string) (*User, error) {
+    // Получение пользователя из базы данных по адресу электронной почты
+    user := new(User)
+    models.DB.Where("email = ?", email).First(&user)
+
+    // Проверка соответствия пароля пользователю
+    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+        return nil, err
+    }
+
+    return user, nil
+}
+
+
 func Register(c *fiber.Ctx) error {
 
-	user := new(models.User)
+	user := new(User)
 
 	if err := c.BodyParser(user); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -51,6 +110,14 @@ func Register(c *fiber.Ctx) error {
 	if errors != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
+
+	password := []byte(user.Password)
+    hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+    if err != nil {
+        // обработка ошибки
+    }
+
+	user.Password = string(hash)
 
 	result := models.DB.Create(&user)
 	if result.Error != nil {
@@ -73,6 +140,27 @@ func RegisterVk(c *fiber.Ctx) error {
 	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
     fmt.Println("url:", url)
     return c.JSON(url)
+
+}
+
+func AuthVk(c *fiber.Ctx) error {
+
+    curUser, ok := c.Locals("authUser").(*models.User)
+        if !ok {
+            return c.Status(http.StatusUnprocessableEntity).JSON(ok)
+        }
+
+// 	conf := &oauth2.Config{
+// 		ClientID:     os.Getenv("CLIENT_ID"),
+// 		ClientSecret: os.Getenv("CLIENT_SECRET"),
+// 		RedirectURL:  os.Getenv("REDIRECT_URL"),
+// 		Scopes:       []string{"profile", "email"},
+// 		Endpoint:     vkAuth.Endpoint,
+// 	}
+//
+// 	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
+//     fmt.Println("url:", url)
+    return c.JSON(curUser)
 
 }
 
@@ -142,30 +230,36 @@ func getCurrentUser(api *vk.Client) UserVk  {
 }
 
 
-func createTokenJwt(id uint64) string {
+func createTokenJwt(id uint64) JwtResponse {
 	// Создаем токен
 	token := jwt.New(jwt.SigningMethodHS256)
+	exp := time.Now().Add(time.Hour * 24).Unix()
 
 	// Устанавливаем параметры токена
 	claims := token.Claims.(jwt.MapClaims)
 	claims["user_id"] = id
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+	claims["exp"] = exp
 
 	// Генерируем секретный ключ
 	key := []byte(os.Getenv("SECRET_KEY"))
 
 	// Подписываем токен с помощью секретного ключа
+	tokenRes := new(JwtResponse)
 	tokenString, err := token.SignedString(key)
 	if err != nil {
 		fmt.Println("Ошибка при создании токена:", err)
-		return ""
+		return *tokenRes
 	}
 
-	return tokenString
+    tokenRes.AccessToken = tokenString
+    tokenRes.RefreshToken = tokenString
+    tokenRes.TokenType = "bearer"
+    tokenRes.ExpiredIn = exp
+	return *tokenRes
 
 }
 
-func refreshTokenJwt(tokenString string) string {
+func refreshTokenJwt(tokenString string) JwtResponse {
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Проверяем, что тип токена - JWT
@@ -188,9 +282,14 @@ func refreshTokenJwt(tokenString string) string {
 
 	exp := time.Unix(int64(claims["exp"].(float64)), 0)
 
-	// Если токен еще действителен, вернем его
+//	Если токен еще действителен, вернем его
 	if time.Until(exp) > 30*time.Second {
-		return tokenString
+	    jwtRes := new(JwtResponse)
+	    jwtRes.AccessToken = tokenString
+	    jwtRes.RefreshToken = tokenString
+	    jwtRes.ExpiredIn = claims["exp"].(int64)
+	    jwtRes.TokenType = "bearer"
+		return *jwtRes
 	}
 
 	return createTokenJwt(claims["user_id"].(uint64))
