@@ -13,6 +13,7 @@ func SetupRoutes(app *fiber.App) {
 
     authGrp := api.Group("/auth")
     authGrp.Post("/register", auth.Register)
+    authGrp.Post("/refresh", middleware.AuthMiddleware(), auth.Refresh)
     authGrp.Post("/login", auth.Login)
 
     vkGrp := authGrp.Group("/vk")

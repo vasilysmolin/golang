@@ -8,6 +8,8 @@ import (
 	"main/models"
 	"os"
 	"time"
+	"math/rand"
+// 	"strings"
 	"context"
 	"net/http"
 	"github.com/go-vk-api/vk"
@@ -43,6 +45,7 @@ type User struct {
     ID  uint64  `json:"id"`
 	Email string `json:"email" validate:"required,email,min=6,max=32"`
 	Password string `json:"password" validate:"min=1,max=32"`
+	Secret string `json:"secret" validate:"max=32"`
     UpdatedAt time.Time `json:"updated_at,omitempty"`
     CreatedAt time.Time `json:"created_at,omitempty"`
 }
@@ -118,12 +121,33 @@ func Register(c *fiber.Ctx) error {
     }
 
 	user.Password = string(hash)
-
+    user.Secret = randStr(10)
 	result := models.DB.Create(&user)
 	if result.Error != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(result.Error)
 	}
 	token := createTokenJwt(user.ID)
+	return c.JSON(token)
+}
+
+func Refresh(c *fiber.Ctx) error {
+
+	user, ok := c.Locals("authUser").(*models.User)
+	if !ok {
+            return c.Status(http.StatusUnprocessableEntity).JSON(ok)
+        }
+//     authHeader := c.Get("Authorization")
+//     if authHeader == "" {
+//         return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"message": "Missing Authorization Header"})
+//     }
+//
+//     authHeaderParts := strings.Split(authHeader, " ")
+//     if len(authHeaderParts) != 2 || authHeaderParts[0] != "Bearer" {
+//         return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"message": "Invalid Authorization Header"})
+//     }
+//
+//     tokenString := authHeaderParts[1]
+    token := createTokenJwt(user.ID)
 	return c.JSON(token)
 }
 
@@ -191,6 +215,7 @@ func VerifyVk(c *fiber.Ctx) error {
     user.Surname = userVk.LastName
     user.Email = "vasya.bal@mail.ru"
     user.Avatar = userVk.Photo
+    user.Secret = randStr(10)
     result := models.DB.Create(&user)
     if result.Error != nil {
         return c.Status(fiber.StatusUnprocessableEntity).JSON(result.Error)
@@ -251,15 +276,30 @@ func createTokenJwt(id uint64) JwtResponse {
 		return *tokenRes
 	}
 
+	// Создаем refresh токен
+    tokenRefresh := jwt.New(jwt.SigningMethodHS256)
+    expRefresh := time.Now().Add(time.Hour * 24 * 30).Unix()
+
+    // Устанавливаем параметры токена
+    claimsRefresh := tokenRefresh.Claims.(jwt.MapClaims)
+    claimsRefresh["user_id"] = id
+    claimsRefresh["exp"] = expRefresh
+
+    tokenStringRefresh, errRefresh := tokenRefresh.SignedString(key)
+    if errRefresh != nil {
+        fmt.Println("Ошибка при создании токена:", errRefresh)
+        return *tokenRes
+    }
+
     tokenRes.AccessToken = tokenString
-    tokenRes.RefreshToken = tokenString
+    tokenRes.RefreshToken = tokenStringRefresh
     tokenRes.TokenType = "bearer"
     tokenRes.ExpiredIn = exp
 	return *tokenRes
 
 }
 
-func refreshTokenJwt(tokenString string) JwtResponse {
+func refreshTokenJwt(tokenString string, user *models.User) JwtResponse {
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Проверяем, что тип токена - JWT
@@ -281,6 +321,10 @@ func refreshTokenJwt(tokenString string) JwtResponse {
 	}
 
 	exp := time.Unix(int64(claims["exp"].(float64)), 0)
+// 	fmt.Println("user:", user)
+// 	sec := randStr(10)
+// 	models.DB.(&user).Update()
+// 	models.DB.(&user).Update(User{Secret: sec})
 
 //	Если токен еще действителен, вернем его
 	if time.Until(exp) > 30*time.Second {
@@ -294,4 +338,17 @@ func refreshTokenJwt(tokenString string) JwtResponse {
 
 	return createTokenJwt(claims["user_id"].(uint64))
 
+}
+
+
+var charset = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+// n is the length of random string we want to generate
+func randStr(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		// randomly select 1 character from given charset
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }
