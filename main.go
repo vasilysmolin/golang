@@ -62,7 +62,7 @@ func main() {
     // Запускаем cron
     c.Start()
     // Запускаем приложение
-	logrus.Fatal(app.Listen(os.Getenv("APP_PORT")))
+	logrus.Fatal(app.Listen(":" + os.Getenv("APP_PORT")))
     // Останавливаем cron перед выходом
     c.Stop()
 
