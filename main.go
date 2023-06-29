@@ -12,6 +12,7 @@ import (
 	cron "github.com/robfig/cron/v3"
 	"log"
 	"main/models"
+	"main/utils"
 	"main/routes"
 	"main/crontask"
 	"time"
@@ -25,6 +26,7 @@ func main() {
 	}
 
 	models.ConnectDatabase()
+	utils.ConnectS3()
 	app := fiber.New(fiber.Config{
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,
@@ -47,6 +49,7 @@ func main() {
 		Max:        200,
 		Expiration: 60 * time.Second,
 	}))
+
 
 	routes.SetupRoutes(app)
 
