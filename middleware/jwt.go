@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"main/utils"
 	"main/models"
 	"net/http"
 	"os"
@@ -37,7 +38,7 @@ func AuthMiddleware() func(*fiber.Ctx) error {
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			user := new(models.User)
-			models.DB.First(&user, claims["user_id"])
+			utils.DB.First(&user, claims["user_id"])
 			c.Locals("authUser", user)
 			return c.Next()
 		}

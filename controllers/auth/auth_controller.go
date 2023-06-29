@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"main/models"
+	"main/utils"
 	"os"
 	"time"
 	"math/rand"
@@ -88,7 +89,7 @@ func Login(c *fiber.Ctx) error {
 func getUserByEmailAndPassword(email, password string) (*User, error) {
     // Получение пользователя из базы данных по адресу электронной почты
     user := new(User)
-    models.DB.Where("email = ?", email).First(&user)
+    utils.DB.Where("email = ?", email).First(&user)
 
     // Проверка соответствия пароля пользователю
     if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
@@ -122,7 +123,7 @@ func Register(c *fiber.Ctx) error {
 
 	user.Password = string(hash)
     user.Secret = randStr(10)
-	result := models.DB.Create(&user)
+	result := utils.DB.Create(&user)
 	if result.Error != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(result.Error)
 	}
@@ -216,7 +217,7 @@ func VerifyVk(c *fiber.Ctx) error {
     user.Email = "vasya.bal@mail.ru"
     user.Avatar = userVk.Photo
     user.Secret = randStr(10)
-    result := models.DB.Create(&user)
+    result := utils.DB.Create(&user)
     if result.Error != nil {
         return c.Status(fiber.StatusUnprocessableEntity).JSON(result.Error)
     }
@@ -225,12 +226,12 @@ func VerifyVk(c *fiber.Ctx) error {
     userSocials.UserID = user.ID
     userSocials.AccessToken = token.AccessToken
     userSocials.SocialID = userVk.ID
-    resultSoc := models.DB.Create(&userSocials)
+    resultSoc := utils.DB.Create(&userSocials)
     if resultSoc.Error != nil {
         return c.Status(fiber.StatusUnprocessableEntity).JSON(resultSoc.Error)
     }
 
-//     res := models.DB.Preload("UserSocials").Find(&user)
+//     res := utils.DB.Preload("UserSocials").Find(&user)
 
     return c.JSON(user)
 
@@ -323,8 +324,8 @@ func refreshTokenJwt(tokenString string, user *models.User) JwtResponse {
 	exp := time.Unix(int64(claims["exp"].(float64)), 0)
 // 	fmt.Println("user:", user)
 // 	sec := randStr(10)
-// 	models.DB.(&user).Update()
-// 	models.DB.(&user).Update(User{Secret: sec})
+// 	utils.DB.(&user).Update()
+// 	utils.DB.(&user).Update(User{Secret: sec})
 
 //	Если токен еще действителен, вернем его
 	if time.Until(exp) > 30*time.Second {

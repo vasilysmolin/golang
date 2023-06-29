@@ -1,10 +1,11 @@
-package models
+package utils
 
 import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
+	"main/models"
 	"log"
 	"os"
 )
@@ -36,6 +37,6 @@ func ConnectDatabase() {
 		panic(err)
 	}
 
-	db.AutoMigrate(&User{}, &Profile{}, &UserSocials{})
+	db.AutoMigrate(&models.User{}, &models.Profile{}, &models.UserSocials{})
 	DB = db
 }

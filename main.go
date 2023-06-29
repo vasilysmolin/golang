@@ -11,11 +11,11 @@ import (
 	"github.com/sirupsen/logrus"
 	cron "github.com/robfig/cron/v3"
 	"log"
-	"main/models"
 	"main/utils"
 	"main/routes"
 	"main/crontask"
 	"time"
+	"os"
 )
 
 func main() {
@@ -25,8 +25,10 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	models.ConnectDatabase()
+	utils.ConnectDatabase()
+	utils.ConnectRedis()
 	utils.ConnectS3()
+
 	app := fiber.New(fiber.Config{
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,
@@ -60,7 +62,7 @@ func main() {
     // Запускаем cron
     c.Start()
     // Запускаем приложение
-	logrus.Fatal(app.Listen(":4091"))
+	logrus.Fatal(app.Listen(os.Getenv("APP_PORT")))
     // Останавливаем cron перед выходом
     c.Stop()
 
