@@ -9,9 +9,11 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
+	cron "github.com/robfig/cron/v3"
 	"log"
 	"main/models"
 	"main/routes"
+	"main/crontask"
 	"time"
 )
 
@@ -29,6 +31,8 @@ func main() {
 		JSONEncoder:  json.Marshal,
 		JSONDecoder:  json.Unmarshal,
 	})
+
+
 	app.Use(recover.New())
 	app.Use(requestid.New())
 	app.Use(logger.New(logger.Config{
@@ -46,5 +50,15 @@ func main() {
 
 	routes.SetupRoutes(app)
 
+    // Создаем экземпляр cron
+    c := cron.New()
+    crontask.Handler(c)
+
+    // Запускаем cron
+    c.Start()
+    // Запускаем приложение
 	logrus.Fatal(app.Listen(":4091"))
+    // Останавливаем cron перед выходом
+    c.Stop()
+
 }
