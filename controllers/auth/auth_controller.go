@@ -157,7 +157,7 @@ func RegisterVk(c *fiber.Ctx) error {
 		ClientID:     os.Getenv("CLIENT_ID"),
 		ClientSecret: os.Getenv("CLIENT_SECRET"),
 		RedirectURL:  os.Getenv("REDIRECT_URL"),
-		Scopes:       []string{"profile", "email"},
+		Scopes:       []string{"email"},
 		Endpoint:     vkAuth.Endpoint,
 	}
 
@@ -193,7 +193,7 @@ func VerifyVk(c *fiber.Ctx) error {
     user := models.User{
             Name: userVk.FirstName,
             Surname: userVk.LastName,
-            Email: "vasya.bal@mail.ru",
+            Email: userVk.Email,
             Secret: helpers.RandStr(10),
             Images: []models.Image{
                 {
