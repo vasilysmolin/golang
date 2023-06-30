@@ -6,11 +6,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"main/models"
+	"main/helpers"
 	"main/utils"
 	"os"
 	"time"
-	"math/rand"
-// 	"strings"
 	"context"
 	"net/http"
 	"github.com/go-vk-api/vk"
@@ -122,7 +121,7 @@ func Register(c *fiber.Ctx) error {
     }
 
 	user.Password = string(hash)
-    user.Secret = randStr(10)
+    user.Secret = helpers.RandStr(10)
 	result := utils.DB.Create(&user)
 	if result.Error != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(result.Error)
@@ -201,22 +200,31 @@ func VerifyVk(c *fiber.Ctx) error {
 
     code := c.Query("code", "anonymous")
     ctx := context.Background()
-    token, err := conf.Exchange(ctx, code)
+    tokenVk, err := conf.Exchange(ctx, code)
     if err != nil {
         fmt.Println("Ошибка при код на access токен:", err)
     }
-    client, err := vk.NewClientWithOptions(vk.WithToken(token.AccessToken))
+    client, err := vk.NewClientWithOptions(vk.WithToken(tokenVk.AccessToken))
     if err != nil {
         fmt.Println("Ошибка при создаем клиента для получения данных из API VK:", err)
     }
     userVk := getCurrentUser(client)
+    pathFile := utils.SaveAvatarByPath(userVk.Photo)
 
-    user := new(models.User)
-    user.Name = userVk.FirstName
-    user.Surname = userVk.LastName
-    user.Email = "vasya.bal@mail.ru"
-    user.Avatar = userVk.Photo
-    user.Secret = randStr(10)
+    user := models.User{
+            Name: userVk.FirstName,
+            Surname: userVk.LastName,
+            Email: "vasya.bal@mail.ru",
+            Secret: helpers.RandStr(10),
+            Images: []models.Image{
+                {
+                    Name: pathFile,
+                    MimeType: "image/jpeg",
+                    Extension: "jpeg",
+                    Size: 10,
+                },
+            },
+        }
     result := utils.DB.Create(&user)
     if result.Error != nil {
         return c.Status(fiber.StatusUnprocessableEntity).JSON(result.Error)
@@ -224,17 +232,16 @@ func VerifyVk(c *fiber.Ctx) error {
 
     userSocials := new(models.UserSocials)
     userSocials.UserID = user.ID
-    userSocials.AccessToken = token.AccessToken
+    userSocials.AccessToken = tokenVk.AccessToken
+    userSocials.Type = "vk"
     userSocials.SocialID = userVk.ID
     resultSoc := utils.DB.Create(&userSocials)
     if resultSoc.Error != nil {
         return c.Status(fiber.StatusUnprocessableEntity).JSON(resultSoc.Error)
     }
 
-//     res := utils.DB.Preload("UserSocials").Find(&user)
-
-    return c.JSON(user)
-
+    token := createTokenJwt(user.ID)
+    return c.JSON(token)
 }
 
 type UserVk struct {
@@ -339,17 +346,4 @@ func refreshTokenJwt(tokenString string, user *models.User) JwtResponse {
 
 	return createTokenJwt(claims["user_id"].(uint64))
 
-}
-
-
-var charset = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-// n is the length of random string we want to generate
-func randStr(n int) string {
-	b := make([]byte, n)
-	for i := range b {
-		// randomly select 1 character from given charset
-		b[i] = charset[rand.Intn(len(charset))]
-	}
-	return string(b)
 }
