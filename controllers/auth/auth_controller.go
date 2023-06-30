@@ -167,27 +167,6 @@ func RegisterVk(c *fiber.Ctx) error {
 
 }
 
-func AuthVk(c *fiber.Ctx) error {
-
-    curUser, ok := c.Locals("authUser").(*models.User)
-        if !ok {
-            return c.Status(http.StatusUnprocessableEntity).JSON(ok)
-        }
-
-// 	conf := &oauth2.Config{
-// 		ClientID:     os.Getenv("CLIENT_ID"),
-// 		ClientSecret: os.Getenv("CLIENT_SECRET"),
-// 		RedirectURL:  os.Getenv("REDIRECT_URL"),
-// 		Scopes:       []string{"profile", "email"},
-// 		Endpoint:     vkAuth.Endpoint,
-// 	}
-//
-// 	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
-//     fmt.Println("url:", url)
-    return c.JSON(curUser)
-
-}
-
 func VerifyVk(c *fiber.Ctx) error {
 
     conf := &oauth2.Config{
@@ -209,7 +188,7 @@ func VerifyVk(c *fiber.Ctx) error {
         fmt.Println("Ошибка при создаем клиента для получения данных из API VK:", err)
     }
     userVk := getCurrentUser(client)
-    pathFile := utils.SaveAvatarByPath(userVk.Photo)
+    FileStruct := utils.SaveAvatarByPath(userVk.Photo)
 
     user := models.User{
             Name: userVk.FirstName,
@@ -218,10 +197,11 @@ func VerifyVk(c *fiber.Ctx) error {
             Secret: helpers.RandStr(10),
             Images: []models.Image{
                 {
-                    Name: pathFile,
-                    MimeType: "image/jpeg",
-                    Extension: "jpeg",
-                    Size: 10,
+                    Name: FileStruct.Name,
+                    MimeType: FileStruct.MimeType,
+                    Extension: FileStruct.Extension,
+                    CollectionName: "avatar",
+                    Size: uint64(FileStruct.Size),
                 },
             },
         }

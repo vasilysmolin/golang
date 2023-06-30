@@ -8,11 +8,18 @@ import (
     "main/helpers"
     "net/http"
     "github.com/sirupsen/logrus"
-//     "main/models"
 	"os"
 	"io"
-// 	"io/ioutil"
+	"path/filepath"
+	"regexp"
 )
+
+type File struct {
+	Name string
+	Extension string
+	Size int64
+	MimeType string
+}
 
 var S3 *s3.S3
 
@@ -29,7 +36,7 @@ func ConnectS3() {
 	S3 = svc
 }
 
-func SaveAvatarByPath(pathFile string) string {
+func SaveAvatarByPath(pathFile string) File {
     tmpName := CreateName();
 
     file, err := os.Create("storage/" + tmpName + ".jpeg")
@@ -50,15 +57,27 @@ func SaveAvatarByPath(pathFile string) string {
 
     fileLocal, err := os.Open("storage/" + tmpName + ".jpeg")
 
+    fileInfo, errOs := os.Stat("storage/" + tmpName + ".jpeg")
+     if errOs != nil {
+     }
+
+    re := regexp.MustCompile(`\?.*`)
+
     nameFile := CreateName()
     randPathFile := CreatePath(nameFile)
+    fileStruct := File{
+             Name: nameFile,
+             Extension: re.ReplaceAllString(filepath.Ext(pathFile), ""),
+             MimeType: getFileMimeType(pathFile),
+             Size: fileInfo.Size(),
+         }
     logrus.Info("path file: " + randPathFile + nameFile + ".jpeg")
 
     S3.PutObject(&s3.PutObjectInput{
      Bucket: aws.String(os.Getenv("AWS_BUCKET")),
-     Key:    aws.String(randPathFile  + nameFile + ".jpeg"),
+     Key:    aws.String(randPathFile  + nameFile + fileStruct.Extension),
      Body:   fileLocal,
-     ContentType: aws.String("image/jpeg"),
+     ContentType: aws.String(fileStruct.MimeType),
      ACL: aws.String("public-read"),
      Metadata: map[string]*string{
          "Cache-Control": aws.String("max-age=31536000"),
@@ -70,13 +89,29 @@ func SaveAvatarByPath(pathFile string) string {
     if err != nil {
     }
 
-    return nameFile
+    return fileStruct
 }
 
 func CreateName() string {
      return helpers.RandStr(80)
 }
 
+
 func CreatePath(name string) string {
      return name[:2] + "/" + name[2:4] + "/" + name[4:6] + "/" + name + "/"
+}
+
+func getFileMimeType(filePath string) string {
+    file, err := os.Open(filePath)
+     if err != nil {
+     return "image/jpeg"
+    }
+    defer file.Close()
+
+    buffer := make([]byte, 512)
+    _, err = file.Read(buffer)
+    if err != nil {
+      return "image/jpeg"
+    }
+ return http.DetectContentType(buffer)
 }
