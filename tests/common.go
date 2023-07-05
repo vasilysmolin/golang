@@ -1,9 +1,9 @@
 package tests
 
 import (
- "main/bootstrap"
+	"main/bootstrap"
 )
 
 func main() {
-    bootstrap.SetupApp()
+	bootstrap.SetupApp()
 }

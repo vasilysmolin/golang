@@ -1,21 +1,21 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-playground/validator/v10"
+	"github.com/go-vk-api/vk"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
-	"main/models"
+	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+	vkAuth "golang.org/x/oauth2/vk"
 	"main/helpers"
+	"main/models"
 	"main/utils"
+	"net/http"
 	"os"
 	"time"
-	"context"
-	"net/http"
-	"github.com/go-vk-api/vk"
-	"golang.org/x/crypto/bcrypt"
-    "golang.org/x/oauth2"
-	vkAuth "golang.org/x/oauth2/vk"
 )
 
 type ErrorResponse struct {
@@ -42,62 +42,60 @@ func ValidateStruct(user User) []*ErrorResponse {
 }
 
 type User struct {
-    ID  uint64  `json:"id"`
-	Email string `json:"email" validate:"required,email,min=6,max=32"`
-	Password string `json:"password" validate:"min=1,max=32"`
-	Secret string `json:"secret" validate:"max=32"`
-    UpdatedAt time.Time `json:"updated_at,omitempty"`
-    CreatedAt time.Time `json:"created_at,omitempty"`
+	ID        uint64    `json:"id"`
+	Email     string    `json:"email" validate:"required,email,min=6,max=32"`
+	Password  string    `json:"password" validate:"min=1,max=32"`
+	Secret    string    `json:"secret" validate:"max=32"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
 }
 
 type Auth struct {
-	Email string `json:"email" validate:"required,email,min=6,max=32"`
+	Email    string `json:"email" validate:"required,email,min=6,max=32"`
 	Password string `json:"password" validate:"min=1,max=32"`
 }
 
 type JwtResponse struct {
-	AccessToken string `json:"access_token"`
+	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
-	TokenType string `json:"type_token"`
-	ExpiredIn int64 `json:"expired_in"`
+	TokenType    string `json:"type_token"`
+	ExpiredIn    int64  `json:"expired_in"`
 }
 
 func Login(c *fiber.Ctx) error {
-    // Получение переданных данных
-    data := new(Auth)
-    if err := c.BodyParser(data); err != nil {
-    		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-    			"message": err.Error(),
-    		})
-    	}
+	// Получение переданных данных
+	data := new(Auth)
+	if err := c.BodyParser(data); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
 
+	// Проверка наличия правильных данных и получение пользователя из базы данных
+	user, err := getUserByEmailAndPassword(data.Email, data.Password)
+	if err != nil {
+		return c.Status(401).JSON(fiber.Map{
+			"message": "Unauthorized",
+		})
+	}
 
-    // Проверка наличия правильных данных и получение пользователя из базы данных
-    user, err := getUserByEmailAndPassword(data.Email, data.Password)
-    if err != nil {
-        return c.Status(401).JSON(fiber.Map{
-            "message": "Unauthorized",
-        })
-    }
-
-    token := createTokenJwt(user.ID)
-    return c.JSON(token)
+	token := createTokenJwt(user.ID)
+	return c.JSON(token)
 }
 
 // Получение пользователя из базы данных по электронной почте и паролю
 func getUserByEmailAndPassword(email, password string) (*User, error) {
-    // Получение пользователя из базы данных по адресу электронной почты
-    user := new(User)
-    utils.DB.Where("email = ?", email).First(&user)
+	// Получение пользователя из базы данных по адресу электронной почты
+	user := new(User)
+	utils.DB.Where("email = ?", email).First(&user)
 
-    // Проверка соответствия пароля пользователю
-    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-        return nil, err
-    }
+	// Проверка соответствия пароля пользователю
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return nil, err
+	}
 
-    return user, nil
+	return user, nil
 }
-
 
 func Register(c *fiber.Ctx) error {
 
@@ -115,13 +113,13 @@ func Register(c *fiber.Ctx) error {
 	}
 
 	password := []byte(user.Password)
-    hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
-    if err != nil {
-        // обработка ошибки
-    }
+	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	if err != nil {
+		// обработка ошибки
+	}
 
 	user.Password = string(hash)
-    user.Secret = helpers.RandStr(10)
+	user.Secret = helpers.RandStr(10)
 	result := utils.DB.Create(&user)
 	if result.Error != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(result.Error)
@@ -134,20 +132,20 @@ func Refresh(c *fiber.Ctx) error {
 
 	user, ok := c.Locals("authUser").(*models.User)
 	if !ok {
-            return c.Status(http.StatusUnprocessableEntity).JSON(ok)
-        }
-//     authHeader := c.Get("Authorization")
-//     if authHeader == "" {
-//         return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"message": "Missing Authorization Header"})
-//     }
-//
-//     authHeaderParts := strings.Split(authHeader, " ")
-//     if len(authHeaderParts) != 2 || authHeaderParts[0] != "Bearer" {
-//         return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"message": "Invalid Authorization Header"})
-//     }
-//
-//     tokenString := authHeaderParts[1]
-    token := createTokenJwt(user.ID)
+		return c.Status(http.StatusUnprocessableEntity).JSON(ok)
+	}
+	//     authHeader := c.Get("Authorization")
+	//     if authHeader == "" {
+	//         return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"message": "Missing Authorization Header"})
+	//     }
+	//
+	//     authHeaderParts := strings.Split(authHeader, " ")
+	//     if len(authHeaderParts) != 2 || authHeaderParts[0] != "Bearer" {
+	//         return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"message": "Invalid Authorization Header"})
+	//     }
+	//
+	//     tokenString := authHeaderParts[1]
+	token := createTokenJwt(user.ID)
 	return c.JSON(token)
 }
 
@@ -162,77 +160,77 @@ func RegisterVk(c *fiber.Ctx) error {
 	}
 
 	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
-    fmt.Println("url:", url)
-    return c.JSON(url)
+	fmt.Println("url:", url)
+	return c.JSON(url)
 
 }
 
 func VerifyVk(c *fiber.Ctx) error {
 
-    conf := &oauth2.Config{
-        ClientID:     os.Getenv("CLIENT_ID"),
-        ClientSecret: os.Getenv("CLIENT_SECRET"),
-        RedirectURL:  os.Getenv("REDIRECT_URL"),
-        Scopes:       []string{"profile", "email"},
-        Endpoint:     vkAuth.Endpoint,
-    }
+	conf := &oauth2.Config{
+		ClientID:     os.Getenv("CLIENT_ID"),
+		ClientSecret: os.Getenv("CLIENT_SECRET"),
+		RedirectURL:  os.Getenv("REDIRECT_URL"),
+		Scopes:       []string{"profile", "email"},
+		Endpoint:     vkAuth.Endpoint,
+	}
 
-    code := c.Query("code", "anonymous")
-    ctx := context.Background()
-    tokenVk, err := conf.Exchange(ctx, code)
-    if err != nil {
-        fmt.Println("Ошибка при код на access токен:", err)
-    }
-    client, err := vk.NewClientWithOptions(vk.WithToken(tokenVk.AccessToken))
-    if err != nil {
-        fmt.Println("Ошибка при создаем клиента для получения данных из API VK:", err)
-    }
-    userVk := getCurrentUser(client)
-    FileStruct := utils.SaveAvatarByPath(userVk.Photo)
+	code := c.Query("code", "anonymous")
+	ctx := context.Background()
+	tokenVk, err := conf.Exchange(ctx, code)
+	if err != nil {
+		fmt.Println("Ошибка при код на access токен:", err)
+	}
+	client, err := vk.NewClientWithOptions(vk.WithToken(tokenVk.AccessToken))
+	if err != nil {
+		fmt.Println("Ошибка при создаем клиента для получения данных из API VK:", err)
+	}
+	userVk := getCurrentUser(client)
+	FileStruct := utils.SaveAvatarByPath(userVk.Photo)
 
-    user := models.User{
-            Name: userVk.FirstName,
-            Surname: userVk.LastName,
-            Email: userVk.Email,
-            Secret: helpers.RandStr(10),
-            Images: []models.Image{
-                {
-                    Name: FileStruct.Name,
-                    MimeType: FileStruct.MimeType,
-                    Extension: FileStruct.Extension,
-                    CollectionName: "avatar",
-                    Size: uint64(FileStruct.Size),
-                },
-            },
-        }
-    result := utils.DB.Create(&user)
-    if result.Error != nil {
-        return c.Status(fiber.StatusUnprocessableEntity).JSON(result.Error)
-    }
+	user := models.User{
+		Name:    userVk.FirstName,
+		Surname: userVk.LastName,
+		Email:   userVk.Email,
+		Secret:  helpers.RandStr(10),
+		Images: []models.Image{
+			{
+				Name:           FileStruct.Name,
+				MimeType:       FileStruct.MimeType,
+				Extension:      FileStruct.Extension,
+				CollectionName: "avatar",
+				Size:           uint64(FileStruct.Size),
+			},
+		},
+	}
+	result := utils.DB.Create(&user)
+	if result.Error != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(result.Error)
+	}
 
-    userSocials := new(models.UserSocials)
-    userSocials.UserID = user.ID
-    userSocials.AccessToken = tokenVk.AccessToken
-    userSocials.Type = "vk"
-    userSocials.SocialID = userVk.ID
-    resultSoc := utils.DB.Create(&userSocials)
-    if resultSoc.Error != nil {
-        return c.Status(fiber.StatusUnprocessableEntity).JSON(resultSoc.Error)
-    }
+	userSocials := new(models.UserSocials)
+	userSocials.UserID = user.ID
+	userSocials.AccessToken = tokenVk.AccessToken
+	userSocials.Type = "vk"
+	userSocials.SocialID = userVk.ID
+	resultSoc := utils.DB.Create(&userSocials)
+	if resultSoc.Error != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(resultSoc.Error)
+	}
 
-    token := createTokenJwt(user.ID)
-    return c.JSON(token)
+	token := createTokenJwt(user.ID)
+	return c.JSON(token)
 }
 
 type UserVk struct {
-	ID        uint64  `json:"id"`
+	ID        uint64 `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
-	Email  string `json:"email"`
+	Email     string `json:"email"`
 	Photo     string `json:"photo_400_orig"`
 }
 
-func getCurrentUser(api *vk.Client) UserVk  {
+func getCurrentUser(api *vk.Client) UserVk {
 	var users []UserVk
 
 	err := api.CallMethod("users.get", vk.RequestParams{
@@ -241,7 +239,6 @@ func getCurrentUser(api *vk.Client) UserVk  {
 	fmt.Println("user:", err)
 	return users[0]
 }
-
 
 func createTokenJwt(id uint64) JwtResponse {
 	// Создаем токен
@@ -265,24 +262,24 @@ func createTokenJwt(id uint64) JwtResponse {
 	}
 
 	// Создаем refresh токен
-    tokenRefresh := jwt.New(jwt.SigningMethodHS256)
-    expRefresh := time.Now().Add(time.Hour * 24 * 30).Unix()
+	tokenRefresh := jwt.New(jwt.SigningMethodHS256)
+	expRefresh := time.Now().Add(time.Hour * 24 * 30).Unix()
 
-    // Устанавливаем параметры токена
-    claimsRefresh := tokenRefresh.Claims.(jwt.MapClaims)
-    claimsRefresh["user_id"] = id
-    claimsRefresh["exp"] = expRefresh
+	// Устанавливаем параметры токена
+	claimsRefresh := tokenRefresh.Claims.(jwt.MapClaims)
+	claimsRefresh["user_id"] = id
+	claimsRefresh["exp"] = expRefresh
 
-    tokenStringRefresh, errRefresh := tokenRefresh.SignedString(key)
-    if errRefresh != nil {
-        fmt.Println("Ошибка при создании токена:", errRefresh)
-        return *tokenRes
-    }
+	tokenStringRefresh, errRefresh := tokenRefresh.SignedString(key)
+	if errRefresh != nil {
+		fmt.Println("Ошибка при создании токена:", errRefresh)
+		return *tokenRes
+	}
 
-    tokenRes.AccessToken = tokenString
-    tokenRes.RefreshToken = tokenStringRefresh
-    tokenRes.TokenType = "bearer"
-    tokenRes.ExpiredIn = exp
+	tokenRes.AccessToken = tokenString
+	tokenRes.RefreshToken = tokenStringRefresh
+	tokenRes.TokenType = "bearer"
+	tokenRes.ExpiredIn = exp
 	return *tokenRes
 
 }
@@ -309,18 +306,18 @@ func refreshTokenJwt(tokenString string, user *models.User) JwtResponse {
 	}
 
 	exp := time.Unix(int64(claims["exp"].(float64)), 0)
-// 	fmt.Println("user:", user)
-// 	sec := randStr(10)
-// 	utils.DB.(&user).Update()
-// 	utils.DB.(&user).Update(User{Secret: sec})
+	// 	fmt.Println("user:", user)
+	// 	sec := randStr(10)
+	// 	utils.DB.(&user).Update()
+	// 	utils.DB.(&user).Update(User{Secret: sec})
 
-//	Если токен еще действителен, вернем его
+	//	Если токен еще действителен, вернем его
 	if time.Until(exp) > 30*time.Second {
-	    jwtRes := new(JwtResponse)
-	    jwtRes.AccessToken = tokenString
-	    jwtRes.RefreshToken = tokenString
-	    jwtRes.ExpiredIn = claims["exp"].(int64)
-	    jwtRes.TokenType = "bearer"
+		jwtRes := new(JwtResponse)
+		jwtRes.AccessToken = tokenString
+		jwtRes.RefreshToken = tokenString
+		jwtRes.ExpiredIn = claims["exp"].(int64)
+		jwtRes.TokenType = "bearer"
 		return *jwtRes
 	}
 

@@ -1,12 +1,12 @@
 package main
 
 import (
- "main/tests"
- "testing"
- "main/bootstrap"
+	"main/bootstrap"
+	"main/tests"
+	"testing"
 )
 
-func TestMain(t *testing.T,) {
-      app := bootstrap.SetupApp()
-      tests.TestRegister(t, app)
+func TestMain(t *testing.T) {
+	app := bootstrap.SetupApp()
+	tests.TestRegister(t, app)
 }

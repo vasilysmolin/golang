@@ -14,3 +14,8 @@ mod:
 test:
 	go test
 
+lint:
+	find . -name "*.go" -exec gofmt -d {} \;
+
+lint-fix:
+	find . -name "*.go" -exec gofmt -w {} \;

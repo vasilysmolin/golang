@@ -10,8 +10,8 @@ import (
 	"github.com/joho/godotenv"
 	cron "github.com/robfig/cron/v3"
 	"log"
-	"main/routes"
 	"main/crontask"
+	"main/routes"
 	"main/utils"
 	"time"
 )
@@ -34,7 +34,6 @@ func SetupApp() *fiber.App {
 		JSONDecoder:  json.Unmarshal,
 	})
 
-
 	app.Use(recover.New())
 	app.Use(requestid.New())
 	app.Use(logger.New(logger.Config{
@@ -50,15 +49,14 @@ func SetupApp() *fiber.App {
 		Expiration: 60 * time.Second,
 	}))
 
-
 	routes.SetupRoutes(app)
 
-    // Создаем экземпляр cron
-    c := cron.New()
-    crontask.Handler(c)
+	// Создаем экземпляр cron
+	c := cron.New()
+	crontask.Handler(c)
 
-    // Запускаем cron
-    c.Start()
+	// Запускаем cron
+	c.Start()
 
-    return app
+	return app
 }

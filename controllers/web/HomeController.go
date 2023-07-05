@@ -6,11 +6,8 @@ import (
 )
 
 func Index(c *fiber.Ctx) error {
-   locale := c.Locals("locale").(utils.Locale)
-   hello := locale["hello"]
-   goodbye := locale["goodbye"]
-   return c.JSON(hello + ", " + goodbye)
+	locale := c.Locals("locale").(utils.Locale)
+	hello := locale["hello"]
+	goodbye := locale["goodbye"]
+	return c.JSON(hello + ", " + goodbye)
 }
-
-
-

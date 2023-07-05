@@ -1,7 +1,7 @@
 package helpers
 
 import (
-    "math/rand"
+	"math/rand"
 )
 
 var charset = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")

@@ -1,35 +1,33 @@
 package routes
 
 import (
-    "github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2"
 	"main/controllers"
-	"main/controllers/web"
 	"main/controllers/auth"
 	"main/controllers/integrations"
+	"main/controllers/web"
 	"main/middleware"
 )
 
 func SetupRoutes(app *fiber.App) {
 
-    api := app.Group("/api", middleware.LocaleMiddleware())
-    webApp := app.Group("/", middleware.LocaleMiddleware())
+	api := app.Group("/api", middleware.LocaleMiddleware())
+	webApp := app.Group("/", middleware.LocaleMiddleware())
 
-    webApp.Get("/", web.Index)
+	webApp.Get("/", web.Index)
 
-    authGrp := api.Group("/auth")
-    yandexGrp := api.Group("/yandex")
-    authGrp.Post("/register", auth.Register)
-    authGrp.Post("/refresh", middleware.AuthMiddleware(), auth.Refresh)
-    authGrp.Post("/login", auth.Login)
+	authGrp := api.Group("/auth")
+	yandexGrp := api.Group("/yandex")
+	authGrp.Post("/register", auth.Register)
+	authGrp.Post("/refresh", middleware.AuthMiddleware(), auth.Refresh)
+	authGrp.Post("/login", auth.Login)
 
-    vkGrp := authGrp.Group("/vk")
+	vkGrp := authGrp.Group("/vk")
 	vkGrp.Get("/", auth.RegisterVk)
 	vkGrp.Get("/verify", auth.VerifyVk)
 
 	usersGrp := api.Group("/users", middleware.AuthMiddleware())
 	usersGrp.Get("/info", controllers.Info)
 
-
 	yandexGrp.Get("/weather", integrations.Weather)
 }
-

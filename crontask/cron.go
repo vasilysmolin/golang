@@ -1,13 +1,13 @@
 package crontask
 
 import (
-	"github.com/sirupsen/logrus"
 	"github.com/robfig/cron/v3"
+	"github.com/sirupsen/logrus"
 )
 
 func Handler(c *cron.Cron) {
-    // Добавляем задачи в cron
-    c.AddFunc("* * * * *", func() {
-        logrus.Info("Запуск крон задачи каждую минуту")
-    })
+	// Добавляем задачи в cron
+	c.AddFunc("* * * * *", func() {
+		logrus.Info("Запуск крон задачи каждую минуту")
+	})
 }
