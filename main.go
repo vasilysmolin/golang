@@ -18,6 +18,7 @@ import (
 	"os"
 )
 
+
 func main() {
 
 	err := godotenv.Load()
@@ -28,6 +29,7 @@ func main() {
 	utils.ConnectDatabase()
 	utils.ConnectRedis()
 	utils.ConnectS3()
+	utils.GetLocales()
 
 	app := fiber.New(fiber.Config{
 		ReadTimeout:  3 * time.Second,

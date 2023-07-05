@@ -3,6 +3,7 @@ package routes
 import (
     "github.com/gofiber/fiber/v2"
 	"main/controllers"
+	"main/controllers/web"
 	"main/controllers/auth"
 	"main/controllers/integrations"
 	"main/middleware"
@@ -10,7 +11,10 @@ import (
 
 func SetupRoutes(app *fiber.App) {
 
-    api := app.Group("/api")
+    api := app.Group("/api", middleware.LocaleMiddleware())
+    webApp := app.Group("/", middleware.LocaleMiddleware())
+
+    webApp.Get("/", web.Index)
 
     authGrp := api.Group("/auth")
     yandexGrp := api.Group("/yandex")
