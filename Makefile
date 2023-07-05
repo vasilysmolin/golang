@@ -10,3 +10,7 @@ get:
 
 mod:
 	go mod tidy
+
+test:
+	go test
+

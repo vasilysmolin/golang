@@ -3,7 +3,6 @@ package web
 import (
 	"github.com/gofiber/fiber/v2"
 	"main/utils"
-	"github.com/sirupsen/logrus"
 )
 
 func Index(c *fiber.Ctx) error {
