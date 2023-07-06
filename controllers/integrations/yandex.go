@@ -52,7 +52,9 @@ func Weather(c *fiber.Ctx) error {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-
+    if err != nil {
+		logrus.Fatal(err)
+	}
 	var myResp weatherJson
 
 	err = json.Unmarshal(body, &myResp)

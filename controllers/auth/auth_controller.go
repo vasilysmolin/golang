@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-playground/validator/v10"
+	"github.com/sirupsen/logrus"
 	"github.com/go-vk-api/vk"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"

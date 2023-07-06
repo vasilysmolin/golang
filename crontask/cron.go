@@ -7,10 +7,10 @@ import (
 
 func Handler(c *cron.Cron) {
 	// Добавляем задачи в cron
-	_, err := c.AddFunc("* * * * *", func() {
+	c.AddFunc("* * * * *", func() {
 		logrus.Info("Запуск крон задачи каждую минуту")
 	})
-	if err != nil {
-		logrus.Fatal(err)
-	}
+// 	if err != nil {
+// 		logrus.Fatal(err)
+// 	}
 }
