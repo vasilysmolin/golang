@@ -27,7 +27,7 @@ func ConnectDatabase() {
 		},
 	)
 
-	db, err := gorm.Open(mysql.Open(""+dbUserName+":"+dbPassword+"@tcp("+dbHost+":3306)/"+dbDatabase+""),
+	db, err := gorm.Open(mysql.Open(""+dbUserName+":"+dbPassword+"@tcp(127.0.0.1:3306)/"+dbDatabase+""),
 		&gorm.Config{
 			Logger: newLogger,
 			NamingStrategy: schema.NamingStrategy{
