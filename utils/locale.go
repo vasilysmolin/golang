@@ -16,12 +16,13 @@ var Langs []string
 
 var CurLocale map[string]Locale
 
-func GetLocales() {
+func GetLocales(root string) {
 	// Загрузка переводов из файла
 	translations := make(map[string]Locale)
 	langs := []string{}
 
-	files, err := ioutil.ReadDir("./locales")
+	files, err := ioutil.ReadDir(root + "/locales")
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,7 +31,7 @@ func GetLocales() {
 		name := file.Name()
 		if !file.IsDir() && filepath.Ext(name) == ".json" {
 			lang := strings.TrimSuffix(name, ".json")
-			jsonFile, err := os.Open(filepath.Join("./locales", name))
+			jsonFile, err := os.Open(filepath.Join(root + "/locales", name))
 			if err != nil {
 				log.Fatal(err)
 			}
