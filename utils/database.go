@@ -35,7 +35,7 @@ func ConnectDatabase() {
 			},
 		})
 	if err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 
 	err = db.AutoMigrate(&models.User{}, &models.Profile{}, &models.UserSocials{}, &models.Image{})

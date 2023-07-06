@@ -59,6 +59,9 @@ func SaveAvatarByPath(pathFile string) File {
 	}
 
 	fileLocal, err := os.Open("storage/" + tmpName + ".jpeg")
+	if err != nil {
+		logrus.Fatal(err)
+	}
 
 	fileInfo, errOs := os.Stat("storage/" + tmpName + ".jpeg")
 	if errOs != nil {
