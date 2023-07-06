@@ -15,7 +15,7 @@ test:
 	go test
 
 lint:
-	find . -name "*.go" -exec gofmt -d {} \;
+	find . -name "*.go" -not -path "./src/*"  -exec gofmt -d {} \;
 
 lint-fix:
-	find . -name "*.go" -exec gofmt -w {} \;
+	find . -name "*.go" -not -path "./src/*" -exec gofmt -w {} \;
