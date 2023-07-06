@@ -7,7 +7,6 @@ import (
 	"github.com/go-vk-api/vk"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
 	vkAuth "golang.org/x/oauth2/vk"
