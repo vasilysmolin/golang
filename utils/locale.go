@@ -31,7 +31,7 @@ func GetLocales(root string) {
 		name := file.Name()
 		if !file.IsDir() && filepath.Ext(name) == ".json" {
 			lang := strings.TrimSuffix(name, ".json")
-			jsonFile, err := os.Open(filepath.Join(root + "/locales", name))
+			jsonFile, err := os.Open(filepath.Join(root+"/locales", name))
 			if err != nil {
 				log.Fatal(err)
 			}

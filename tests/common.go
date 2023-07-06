@@ -1,10 +1,6 @@
 package tests
 
-import (
-	"main/bootstrap"
-)
-
-func main() {
+func Root() string {
 	root := ".."
-	bootstrap.SetupApp(root)
+	return root
 }

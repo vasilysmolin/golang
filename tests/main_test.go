@@ -6,6 +6,6 @@ import (
 )
 
 func TestMain(t *testing.T) {
-	root := ".."
+	root := Root()
 	bootstrap.SetupApp(root)
 }
