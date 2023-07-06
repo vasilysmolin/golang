@@ -1,6 +1,6 @@
 package tests
 
 func Root() string {
-	root := "."
+	root := ".."
 	return root
 }
