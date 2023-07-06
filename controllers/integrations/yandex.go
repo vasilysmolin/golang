@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -39,6 +40,7 @@ func Weather(c *fiber.Ctx) error {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
+		logrus.Fatal(err)
 	}
 	req.Header.Add("X-Yandex-API-Key", apiKey)
 	req.Header.Set("Accept", "application/json")
@@ -46,6 +48,7 @@ func Weather(c *fiber.Ctx) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		logrus.Fatal(err)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -54,6 +57,7 @@ func Weather(c *fiber.Ctx) error {
 
 	err = json.Unmarshal(body, &myResp)
 	if err != nil {
+		logrus.Fatal(err)
 	}
 
 	return c.JSON(myResp)

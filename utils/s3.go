@@ -41,24 +41,28 @@ func SaveAvatarByPath(pathFile string) File {
 
 	file, err := os.Create("storage/" + tmpName + ".jpeg")
 	if err != nil {
+		logrus.Fatal(err)
 	}
 	defer file.Close()
 
 	// Получаем содержимое фото
 	resp, err := http.Get(pathFile)
 	if err != nil {
+		logrus.Fatal(err)
 	}
 	defer resp.Body.Close()
 
 	// Копируем содержимое ответа в файл
 	_, err = io.Copy(file, resp.Body)
 	if err != nil {
+		logrus.Fatal(err)
 	}
 
 	fileLocal, err := os.Open("storage/" + tmpName + ".jpeg")
 
 	fileInfo, errOs := os.Stat("storage/" + tmpName + ".jpeg")
 	if errOs != nil {
+		logrus.Fatal(errOs)
 	}
 
 	re := regexp.MustCompile(`\?.*`)
@@ -71,9 +75,8 @@ func SaveAvatarByPath(pathFile string) File {
 		MimeType:  getFileMimeType(pathFile),
 		Size:      fileInfo.Size(),
 	}
-	logrus.Info("path file: " + randPathFile + nameFile + ".jpeg")
 
-	S3.PutObject(&s3.PutObjectInput{
+	_, err = S3.PutObject(&s3.PutObjectInput{
 		Bucket:      aws.String(os.Getenv("AWS_BUCKET")),
 		Key:         aws.String(randPathFile + nameFile + fileStruct.Extension),
 		Body:        fileLocal,
@@ -83,9 +86,13 @@ func SaveAvatarByPath(pathFile string) File {
 			"Cache-Control": aws.String("max-age=31536000"),
 		},
 	})
+	if err != nil {
+		logrus.Fatal(err)
+	}
 
 	err = os.Remove("storage/" + tmpName + ".jpeg")
 	if err != nil {
+		logrus.Fatal(err)
 	}
 
 	return fileStruct

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"log"
 	"os"
@@ -38,7 +39,10 @@ func GetLocales() {
 			byteValue, _ := ioutil.ReadAll(jsonFile)
 
 			var translation Locale
-			json.Unmarshal(byteValue, &translation)
+			err = json.Unmarshal(byteValue, &translation)
+			if err != nil {
+				logrus.Fatal(err)
+			}
 
 			translations[lang] = translation
 			langs = append(langs, lang)

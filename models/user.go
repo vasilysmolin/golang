@@ -8,8 +8,8 @@ type User struct {
 	ID          uint64      `gorm:"primary_key" json:"id"`
 	Phone       string      `gorm:"size:256;default:null;uniqueIndex:idx_phone,unique" json:"phone" validate:"min=3,max=32"`
 	Email       string      `gorm:"size:256;uniqueIndex:idx_email,unique;not null;" json:"email" validate:"required,email,min=6,max=32"`
-	EmailVerify time.Time   `gorm:"size:256;default:null;" json:"deleted_at,omitempty"`
-	PhoneVerify time.Time   `gorm:"size:256;default:null;" json:"deleted_at,omitempty"`
+	EmailVerify time.Time   `gorm:"size:256;default:null;" json:"email_verify,omitempty"`
+	PhoneVerify time.Time   `gorm:"size:256;default:null;" json:"phone_verify,omitempty"`
 	Name        string      `gorm:"size:256;default:null;" json:"name" validate:"min=1,max=32"`
 	LastName    string      `gorm:"size:256;default:null;" json:"last_name" validate:"min=1,max=32"`
 	Surname     string      `gorm:"size:256;default:null;" json:"surname" validate:"min=1,max=32"`

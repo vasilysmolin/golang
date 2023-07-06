@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -37,6 +38,9 @@ func ConnectDatabase() {
 		panic(err)
 	}
 
-	db.AutoMigrate(&models.User{}, &models.Profile{}, &models.UserSocials{}, &models.Image{})
+	err = db.AutoMigrate(&models.User{}, &models.Profile{}, &models.UserSocials{}, &models.Image{})
+	if err != nil {
+		logrus.Fatal(err)
+	}
 	DB = db
 }

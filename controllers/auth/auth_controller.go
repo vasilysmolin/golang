@@ -115,7 +115,7 @@ func Register(c *fiber.Ctx) error {
 	password := []byte(user.Password)
 	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 	if err != nil {
-		// обработка ошибки
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(err)
 	}
 
 	user.Password = string(hash)
@@ -284,43 +284,43 @@ func createTokenJwt(id uint64) JwtResponse {
 
 }
 
-func refreshTokenJwt(tokenString string, user *models.User) JwtResponse {
-
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Проверяем, что тип токена - JWT
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("invalid token")
-		}
-
-		// Возвращаем ключ для проверки подписи токена
-		return []byte(os.Getenv("SECRET_KEY")), nil
-	})
-
-	if err != nil || !token.Valid {
-		// Обработка ошибки
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
-		// Обработка ошибки
-	}
-
-	exp := time.Unix(int64(claims["exp"].(float64)), 0)
-	// 	fmt.Println("user:", user)
-	// 	sec := randStr(10)
-	// 	utils.DB.(&user).Update()
-	// 	utils.DB.(&user).Update(User{Secret: sec})
-
-	//	Если токен еще действителен, вернем его
-	if time.Until(exp) > 30*time.Second {
-		jwtRes := new(JwtResponse)
-		jwtRes.AccessToken = tokenString
-		jwtRes.RefreshToken = tokenString
-		jwtRes.ExpiredIn = claims["exp"].(int64)
-		jwtRes.TokenType = "bearer"
-		return *jwtRes
-	}
-
-	return createTokenJwt(claims["user_id"].(uint64))
-
-}
+// func refreshTokenJwt(tokenString string, user *models.User) JwtResponse {
+//
+// 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+// 		// Проверяем, что тип токена - JWT
+// 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+// 			return nil, fmt.Errorf("invalid token")
+// 		}
+//
+// 		// Возвращаем ключ для проверки подписи токена
+// 		return []byte(os.Getenv("SECRET_KEY")), nil
+// 	})
+//
+// 	if err != nil || !token.Valid {
+// 		// Обработка ошибки
+// 	}
+//
+// 	claims, ok := token.Claims.(jwt.MapClaims)
+// 	if !ok || !token.Valid {
+// 		// Обработка ошибки
+// 	}
+//
+// 	exp := time.Unix(int64(claims["exp"].(float64)), 0)
+// 	// 	fmt.Println("user:", user)
+// 	// 	sec := randStr(10)
+// 	// 	utils.DB.(&user).Update()
+// 	// 	utils.DB.(&user).Update(User{Secret: sec})
+//
+// 	//	Если токен еще действителен, вернем его
+// 	if time.Until(exp) > 30*time.Second {
+// 		jwtRes := new(JwtResponse)
+// 		jwtRes.AccessToken = tokenString
+// 		jwtRes.RefreshToken = tokenString
+// 		jwtRes.ExpiredIn = claims["exp"].(int64)
+// 		jwtRes.TokenType = "bearer"
+// 		return *jwtRes
+// 	}
+//
+// 	return createTokenJwt(claims["user_id"].(uint64))
+//
+// }
