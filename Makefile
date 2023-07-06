@@ -12,7 +12,7 @@ mod:
 	go mod tidy
 
 test:
-	go test
+	go test ./tests...
 
 lint:
 	find . -name "*.go" -not -path "./src/*"  -exec gofmt -d {} \;

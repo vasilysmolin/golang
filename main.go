@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
-	app := bootstrap.SetupApp()
+	root := "."
+	app := bootstrap.SetupApp(root)
 	logrus.Fatal(app.Listen(":" + os.Getenv("APP_PORT")))
 }

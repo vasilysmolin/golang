@@ -13,19 +13,21 @@ import (
 	"main/crontask"
 	"main/routes"
 	"main/utils"
+	"path"
 	"time"
 )
 
-func SetupApp() *fiber.App {
-	err := godotenv.Load()
+func SetupApp(root string) *fiber.App {
+	envPath := path.Join(root, ".env")
+	err := godotenv.Load(envPath)
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
 	utils.ConnectDatabase()
-	utils.ConnectRedis()
+	// 	utils.ConnectRedis()
 	utils.ConnectS3()
-	utils.GetLocales()
+	utils.GetLocales(root)
 
 	app := fiber.New(fiber.Config{
 		ReadTimeout:  3 * time.Second,
