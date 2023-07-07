@@ -31,7 +31,7 @@ jobs:
 
       - uses: mirromutth/mysql-action@v1.1
         with:
-          host port: 3306 # Optional, default value is 3306. The port of host
+          host port: 3308 # Optional, default value is 3306. The port of host
           container port: 3306 # Optional, default value is 3306. The port of container
           character set server: 'utf8' # Optional, default value is 'utf8mb4'. The '--character-set-server' option for mysqld
           collation server: 'latin1_swedish_ci' # Optional, default value is 'utf8mb4_general_ci'. The '--collation-server' option for mysqld
@@ -48,7 +48,7 @@ jobs:
         run: make test
         env:
           DB_HOST: 127.0.0.1
-          DB_PORT: 3306
+          DB_PORT: 3308
           DB_DATABASE: floratera
           DB_USER: floratera
           DB_PASSWORD: password_floratera_1111
