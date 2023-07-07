@@ -1,20 +1,32 @@
 version: '3'
 services:
-  golang:
-    build: .
-    env_file: .env-go
-    ports:
-      - "127.0.0.1:4091:4091"
-
-#  mariadb:
-#    image: mariadb
-#    restart: always
-#    volumes:
-#      - ./mariadb_data:/var/lib/mysql
-#    environment:
-#      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-#      MYSQL_DATABASE: ${DB_DATABASE}
-#      MYSQL_USER: ${DB_USERNAME}
-#      MYSQL_PASSWORD: ${DB_PASSWORD}
+#  golang:
+#    build: .
+#    env_file: .env-go
 #    ports:
-#      - "3316:3306"
+#      - "127.0.0.1:4091:4091"
+
+  mariadb:
+    image: mariadb
+    restart: always
+    volumes:
+      - ./docker/data/mariadb_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3317:3306"
+
+  rabbitmq:
+    image: rabbitmq:3.6-management-alpine
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit disk_free_limit 2147483648
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ./docker/data/rabbitmq/data/:/var/lib/rabbitmq/
