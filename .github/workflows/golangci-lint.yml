@@ -15,17 +15,17 @@ jobs:
   golangci:
     name: lint
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:latest
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: floratera
-          MYSQL_USER: floratera
-          MYSQL_PASSWORD: password_floratera_1111
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+#    services:
+#      mysql:
+#        image: mysql:latest
+#        env:
+#          MYSQL_ROOT_PASSWORD: root
+#          MYSQL_DATABASE: floratera
+#          MYSQL_USER: floratera
+#          MYSQL_PASSWORD: password_floratera_1111
+#        ports:
+#          - 3306:3306
+#        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
@@ -40,17 +40,17 @@ jobs:
           # When `install-mode` is `goinstall` the value can be v1.2.3, `latest`, or the hash of a commit.
           version: v1.53
 
-#      - uses: mirromutth/mysql-action@v1.1
-#        with:
-#          host port: 3306 # Optional, default value is 3306. The port of host
-#          container port: 3306 # Optional, default value is 3306. The port of container
-#          character set server: 'utf8' # Optional, default value is 'utf8mb4'. The '--character-set-server' option for mysqld
-#          collation server: 'utf8mb4_general_ci' # Optional, default value is 'utf8mb4_general_ci'. The '--collation-server' option for mysqld
-#          mysql version: '5.7' # Optional, default value is "latest". The version of the MySQL
-#          mysql database: 'floratera' # Optional, default value is "test". The specified database which will be create
-#          mysql root password: '1111' # Required if "mysql user" is empty, default is empty. The root superuser password
-#          mysql user: 'floratera' # Required if "mysql root password" is empty, default is empty. The superuser for the specified database. Can use secrets, too
-#          mysql password: '1111' # Required if "mysql user" exists. The password for the "mysql user"
+      - uses: mirromutth/mysql-action@v1.1
+        with:
+          host port: 3306 # Optional, default value is 3306. The port of host
+          container port: 3306 # Optional, default value is 3306. The port of container
+          character set server: 'utf8' # Optional, default value is 'utf8mb4'. The '--character-set-server' option for mysqld
+          collation server: 'utf8mb4_general_ci' # Optional, default value is 'utf8mb4_general_ci'. The '--collation-server' option for mysqld
+          mysql version: '5.7' # Optional, default value is "latest". The version of the MySQL
+          mysql database: 'floratera' # Optional, default value is "test". The specified database which will be create
+          mysql root password: 'password_floratera_1111' # Required if "mysql user" is empty, default is empty. The root superuser password
+          mysql user: 'floratera' # Required if "mysql root password" is empty, default is empty. The superuser for the specified database. Can use secrets, too
+          mysql password: 'password_floratera_1111' # Required if "mysql user" exists. The password for the "mysql user"
 
       - name: env
         run: cp -n .env-example .env || true
