@@ -13,6 +13,7 @@ import (
 	"main/crontask"
 	"main/routes"
 	"main/utils"
+	"os"
 	"path"
 	"time"
 )
@@ -34,6 +35,8 @@ func SetupApp(root string) *fiber.App {
 		WriteTimeout: 3 * time.Second,
 		JSONEncoder:  json.Marshal,
 		JSONDecoder:  json.Unmarshal,
+		ServerHeader: "Fiber",
+		AppName:      os.Getenv("APP_NAME"),
 	})
 
 	app.Use(recover.New())
