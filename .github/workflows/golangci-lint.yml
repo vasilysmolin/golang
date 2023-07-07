@@ -57,3 +57,9 @@ jobs:
 
       - name: run test
         run: make test
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: floratera
+          DB_USER: floratera
+          DB_PASSWORD: password_floratera_1111
