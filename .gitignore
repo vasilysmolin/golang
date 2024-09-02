@@ -5,3 +5,4 @@
 .env
 .env-go
 /docker
+/src
