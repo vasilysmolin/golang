@@ -19,14 +19,14 @@ services:
     ports:
       - "3317:3306"
 
-  rabbitmq:
-    image: rabbitmq:3.6-management-alpine
-    environment:
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
-      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit disk_free_limit 2147483648
-    ports:
-      - 5672:5672
-      - 15672:15672
-    volumes:
-      - ./docker/data/rabbitmq/data/:/var/lib/rabbitmq/
+#  rabbitmq:
+#    image: rabbitmq:3.6-management-alpine
+#    environment:
+#      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+#      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+#      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit disk_free_limit 2147483648
+#    ports:
+#      - 5672:5672
+#      - 15672:15672
+#    volumes:
+#      - ./docker/data/rabbitmq/data/:/var/lib/rabbitmq/

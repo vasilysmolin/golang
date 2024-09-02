@@ -7,18 +7,21 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/spf13/cobra"
 	"github.com/joho/godotenv"
 	cron "github.com/robfig/cron/v3"
 	"log"
 	"main/crontask"
 	"main/routes"
 	"main/utils"
+	"main/commands"
 	"os"
 	"path"
 	"time"
 )
 
 func SetupApp(root string) *fiber.App {
+
 	envPath := path.Join(root, ".env")
 	err := godotenv.Load(envPath)
 	if err != nil {
@@ -62,6 +65,14 @@ func SetupApp(root string) *fiber.App {
 
 	// Запускаем cron
 	c.Start()
+
+	if len(os.Args) > 1 {
+        var rootCmd = &cobra.Command{Use: "app"}
+
+        rootCmd.AddCommand(commands.GoodbyeCmd)
+
+        rootCmd.Execute()
+    }
 
 	return app
 }

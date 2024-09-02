@@ -155,7 +155,7 @@ func RegisterVk(c *fiber.Ctx) error {
 		ClientID:     os.Getenv("CLIENT_ID"),
 		ClientSecret: os.Getenv("CLIENT_SECRET"),
 		RedirectURL:  os.Getenv("REDIRECT_URL"),
-		Scopes:       []string{"email"},
+		Scopes:       []string{"email", "phone"},
 		Endpoint:     vkAuth.Endpoint,
 	}
 
@@ -186,12 +186,14 @@ func VerifyVk(c *fiber.Ctx) error {
 		fmt.Println("Ошибка при создаем клиента для получения данных из API VK:", err)
 	}
 	userVk := getCurrentUser(client)
+	fmt.Println("vk:", userVk)
 	FileStruct := utils.SaveAvatarByPath(userVk.Photo)
 
 	user := models.User{
 		Name:    userVk.FirstName,
 		Surname: userVk.LastName,
 		Email:   userVk.Email,
+		Phone:   userVk.Phone,
 		Secret:  helpers.RandStr(10),
 		Images: []models.Image{
 			{
@@ -227,6 +229,7 @@ type UserVk struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
+	Phone     string `json:"phone"`
 	Photo     string `json:"photo_400_orig"`
 }
 
@@ -234,7 +237,7 @@ func getCurrentUser(api *vk.Client) UserVk {
 	var users []UserVk
 
 	err := api.CallMethod("users.get", vk.RequestParams{
-		"fields": "photo_400_orig,city,email",
+		"fields": "photo_400_orig,city,email,phone",
 	}, &users)
 	fmt.Println("user:", err)
 	return users[0]
