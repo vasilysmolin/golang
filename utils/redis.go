@@ -2,6 +2,7 @@ package utils
 
 import (
 	"github.com/go-redis/redis"
+	"github.com/sirupsen/logrus"
 	"os"
 )
 
@@ -15,19 +16,21 @@ func ConnectRedis() {
 	})
 
 	// Проверяем соединение
-	//      pong, err := client.Ping().Result()
-	//      logrus.Info(pong)
+    pong, err := client.Ping().Result()
+    logrus.Info(pong)
+    logrus.Info(err)
 
 	// Пример выполнения запросов к Redis
-	//      err = client.Set("key", "value", 0).Err()
-	//      if err != nil {
-	//       logrus.Info(err)
-	//      }
-	//
-	//      val, errors := client.Get("key").Result()
-	//      if errors != nil {
-	//       logrus.Info(errors)
-	//      }
-	//      logrus.Info("key", val)
+//     err = client.Set("key", "value", 0).Err()
+//     if err != nil {
+//       logrus.Info(err)
+//     }
+//
+//     val, errors := client.Get("key").Result()
+//     if errors != nil {
+//       logrus.Info(errors)
+//     }
+//     logrus.Info("key", val)
+
 	RedisCon = client
 }

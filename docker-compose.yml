@@ -19,6 +19,15 @@ services:
     ports:
       - "3317:3306"
 
+  redis:
+    image: redis:6-alpine
+    restart: always
+    volumes:
+      - ./images/redis/redis.conf:/redis.conf
+    ports:
+      - "0.0.0.0:6399:6379"
+    command: [ "redis-server", "/redis.conf" ]
+
 #  rabbitmq:
 #    image: rabbitmq:3.6-management-alpine
 #    environment:

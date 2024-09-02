@@ -29,7 +29,7 @@ func SetupApp(root string) *fiber.App {
 	}
 
 	utils.ConnectDatabase()
-	// 	utils.ConnectRedis()
+	utils.ConnectRedis()
 	utils.ConnectS3()
 	utils.GetLocales(root)
 
